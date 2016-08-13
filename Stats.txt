@@ -1,21 +1,21 @@
 Team            Attack       Defense    
-Arsenal         1.65         0.86       
-Aston Villa     0.00         0.86       
-Burnley         1.17         0.00       
-Chelsea         1.13         1.19       
-Crystal Palace  1.15         0.00       
-Everton         0.01         0.95       
-Hull            0.00         0.01       
-Leicester       2.28         0.87       
-Liverpool       1.29         2.17       
-Man City        1.26         0.00       
-Man United      0.00         0.00       
-Newcastle       1.23         0.00       
-QPR             1.15         1.63       
-Southampton     0.00         1.17       
-Stoke           2.06         0.78       
-Sunderland      0.84         1.97       
-Swansea         0.00         0.65       
-Tottenham       1.05         0.01       
-West Brom       1.17         1.79       
-West Ham        0.00         1.21       
+Arsenal         1.32         0.90       
+Aston Villa     0.59         1.37       
+Burnley         0.53         1.27       
+Chelsea         1.35         0.80       
+Crystal Palace  0.89         1.24       
+Everton         0.90         1.22       
+Hull            0.62         1.23       
+Leicester       0.87         1.34       
+Liverpool       0.98         1.18       
+Man City        1.55         0.97       
+Man United      1.15         0.91       
+Newcastle       0.77         1.53       
+QPR             0.81         1.77       
+Southampton     1.00         0.81       
+Stoke           0.90         1.10       
+Sunderland      0.58         1.27       
+Swansea         0.87         1.20       
+Tottenham       1.10         1.31       
+West Brom       0.71         1.24       
+West Ham        0.83         1.14       

@@ -13,6 +13,7 @@ home_adv = 1.35
 decay = 70.0
 rho = 0.03
 
+""" previous results csv from http://www.football-data.co.uk/englandm.php"""
 results_csv = 'PremierLeague14.csv'
 # 20 PL teams in csv file (needs changing with seasons)
 teams = ["Arsenal","Aston Villa","Burnley","Chelsea","Crystal Palace",
@@ -102,7 +103,8 @@ def poisson(m, n):
 # f(k) = exp(-m) * m**k / k!
 
 """ MC routine to maximise likelihood function, convergence determined by
-	'rdiff' """
+	'rdiff'. Returns optimised ability_dict, log likelihood convergence and 
+	number of cycles."""
 def monte_carlo_opt(log_like, ability_dict, results_list) :
 	delta = 0.1
 	conv = []
@@ -126,3 +128,67 @@ def monte_carlo_opt(log_like, ability_dict, results_list) :
 		conv.append(log_like)
 		k += 1
 	return (ability_dict, conv, k)
+	
+""" Sum of all outcomes where home goals > away goals"""
+def home_win(matrix) :
+	return sum([matrix[i][j]                    
+    	for i in range(matrix.shape[0])
+        for j in range(matrix.shape[1])
+        if i > j])
+        
+""" Sum of all outcomes where home goals = away goals"""
+def draw(matrix) :
+	return sum([matrix[i][j]                    
+    	for i in range(matrix.shape[0])
+        for j in range(matrix.shape[1])
+        if i == j])
+        
+""" Sum of all outcomes where home goals < away goals"""   
+def away_win(matrix) :
+	return sum([matrix[i][j]                    
+    	for i in range(matrix.shape[0])
+        for j in range(matrix.shape[1])
+        if i < j])
+
+""" Print results to command line"""
+def print_probs(matrix) :
+	print " "
+	print "Probabilities calculated as..."
+	print " "
+	a = float(home_win(matrix))
+	b = float(draw(matrix))
+	c = float(away_win(matrix))
+	print '%-10s %-12s %-10s' % ('Outcome', 'Probability', 'Odds (Bet Multiplier)')	
+	print '%10s %-12f %-10f' % ('Home win :', a, 1.0/a)
+	print '%10s %-12f %-10f' % ('Draw :', b, 1.0/b)
+	print '%10s %-12f %-10f' % ('Away win :', c, 1.0/c)
+	print "Check... ", a + b + c
+	print " "
+	
+""" Prints teams and their ability parameters 
+	"""
+def print_ability_table(ability_dict) :
+	rank_dict = {}
+	print " "
+	print '%-15s %-12s %-10s' % ('Team', 'Attack', 'Defense')
+	for key in sorted(ability_dict.keys()) :
+		a = key
+		b = ability_dict[key][0]
+		c = ability_dict[key][1]
+		d = b - c
+		rank_dict[key] = d
+		bb = format(float(b), '.2f')
+		cc = format(float(c), '.2f')
+		print '%-15s %-12s %-10s' % (a, bb, cc)
+		
+""" Difference Rankings (Generates table which should correspond to ranking of teams 
+	for debugging)
+	"""
+#	rank_list = []
+#	for key in rank_dict :
+#		rank_tuple = (key, rank_dict[key])
+#		rank_list.append(rank_tuple)
+#	sort_list = sorted(rank_list, key=lambda tup: tup[1])
+#	for team in reversed(sort_list) : 
+#		print team
+#	print " "
