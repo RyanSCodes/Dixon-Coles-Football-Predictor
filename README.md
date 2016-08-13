@@ -15,6 +15,6 @@ The teams are:
 
 Arsenal    | Aston Villa | Burnley   | Chelsea     | Crystal Palace
 -----------|-------------|-----------|-------------|----------------
-Everton    | Hull        | Leicester | Liverpool   | Man City
+**Everton**    | **Hull**        | **Leicester** | **Liverpool**   | **Man City**
 Man United | Newcastle   | QPR       | Southampton | Stoke
 Sunderland | Swansea     | Tottenham | West Brom   | West Ham
