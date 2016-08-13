@@ -13,7 +13,8 @@ are less relevant to present form).
 
 The teams are:
 
-Arsenal | Aston Villa | Burnley | Chelsea | Crystal Palace
-Everton | Hull | Leicester | Liverpool | Man City
-Man United | Newcastle | QPR | Southampton | Stoke
-Sunderland | Swansea | Tottenham | West Brom | West Ham
+Arsenal    | Aston Villa | Burnley   | Chelsea     | Crystal Palace
+-----------|-------------|-----------|-------------|----------------
+Everton    | Hull        | Leicester | Liverpool   | Man City
+Man United | Newcastle   | QPR       | Southampton | Stoke
+Sunderland | Swansea     | Tottenham | West Brom   | West Ham
