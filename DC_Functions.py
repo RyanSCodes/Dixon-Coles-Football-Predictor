@@ -1,93 +1,90 @@
-
-import sys
-import re
-import random
-import math
 import numpy as np
+import pandas as pd
+import datetime as dt
+import sys
+import string
+import random 
+import math
 
 """ Parameters obtained from optimising. Decay weights results by age, to an exponential
 	function. Rho is a deviation from Poisson behaviour. Home advantage is a factor
-	to alter the distribution of home teams.
-	"""
-home_adv = 1.35
+	to alter the distribution of home teams"""
+home_adv = 1.2
 decay = 70.0
 rho = 0.03
 
-""" Reads spreadsheet and returns list of results and age in days since most 
-	recent game 
-	"""
-def read_excel(wsx) :
-	res_list = []	
-	for k in range(2,382):
-		mini_list = []
-		d = str(wsx.cell(row = k, column = 2).value)
-		end = d.find(" ")
-		dd = d[:end]
-		match = re.search(r'(\d\d\d\d)-(\d\d)-(\d\d)', dd)
-		if match : 
-			year = match.group(1)
-			month = match.group(2)
-			day = int(match.group(3))
-		total = 0
-		if year == '2015' :
-			total += 137
-		if month == '09' :
-			total += 15
-		elif month == '10' :
-			total += 15 + 30
-		elif month == '11' :
-			total += 15 + 30 + 31
-		elif month == '12' :
-			total += 15 + 30 + 31 + 30
-		elif month == '02' :
-			total += 31
-		elif month == '03' :
-			total += 31	+ 28	
-		elif month == '04' :
-			total += 31 + 28 + 31
-		elif month == '05' :
-			total += 31 + 28 + 31 + 30
-		total += day - 16	
-		total = 265 - total
-		mini_list.append(total)
-		for j in range(3,5) :
-			a = str(wsx.cell(row = k, column = j).value)
-			mini_list.append(a)
-		for j in range(5,7) :
-			a = int(wsx.cell(row = k, column = j).value)
-			mini_list.append(a)
-		res_list.append(mini_list)
-	return res_list	
+""" previous results csv from http://www.football-data.co.uk/englandm.php"""
+#results_csv = 'PremierLeague14.csv'
+# 20 PL teams in csv file (needs changing with seasons)
+#teams = ["Arsenal","Aston Villa","Burnley","Chelsea","Crystal Palace",
+#	"Everton","Hull","Leicester","Liverpool","Man City","Man United",
+#	"Newcastle","QPR","Southampton","Stoke","Sunderland","Swansea",
+#	"Tottenham","West Brom","West Ham"]
+results_csv = 'E0.csv'
+teams = ["Arsenal","Aston Villa","Bournemouth","Chelsea","Crystal Palace",
+	"Everton","Leicester","Liverpool","Man City","Man United",
+	"Newcastle","Norwich","Southampton","Stoke","Sunderland","Swansea",
+	"Tottenham","Watford","West Brom","West Ham"]
+	
+"""Calculates differences in datetimes and returns int"""
+def delta_time(times) :
+    now, date = times
+    A = np.datetime64(date)
+    B = np.datetime64(now)
+    C = (B-A)/(60*60*24*10**6)
+    return C.astype(int)
 
-""" Initialises ability dict with random parameters 
-	"""
+"""Pandas messing up datetimes..."""
+def reformat_date(date_string) :
+    day = date_string[:2]
+    month = date_string[3:5]
+    year = "20"+ date_string[6:]
+    newdate = year + "-" + month + '-' + day
+    return newdate
+    
+# Perhaps truncate records after 365 days (or other)
+"""Reads previous results csv and returns numpy matrix""" 
+def results_array() :
+	df = pd.read_csv(results_csv, dtype={'Date': str })
+	df = df[['Date', 'HomeTeam', 'AwayTeam', 'FTHG', 'FTAG'] ]
+	df['Date'] = df['Date'].apply(reformat_date)
+	df.Date = pd.to_datetime(df.Date)
+	df['Now'] = dt.datetime.now()
+	df['DaysSince'] = df[['Now', 'Date']].apply(delta_time, axis=1)
+	df = df[['DaysSince', 'HomeTeam', 'AwayTeam', 'FTHG', 'FTAG']]
+	return df.as_matrix()
+
+"""Initialises ability_dict with random attack and defense parameters""" 
 def random_abilities() :
 	ability_dict = {}
-	ability_dict["Arsenal"] = [random.random(), random.random()]
-	ability_dict["Aston Villa"] = [random.random(), random.random()]
-	ability_dict["Burnley"] = [random.random(), random.random()]
-	ability_dict["Chelsea"] = [random.random(), random.random()]
-	ability_dict["Crystal Palace"] = [random.random(), random.random()]
-	ability_dict["Everton"] = [random.random(), random.random()]
-	ability_dict["Hull"] = [random.random(), random.random()]
-	ability_dict["Leicester"] = [random.random(), random.random()]
-	ability_dict["Liverpool"] = [random.random(), random.random()]
-	ability_dict["Man City"] = [random.random(), random.random()]
-	ability_dict["Man United"] = [random.random(), random.random()]
-	ability_dict["Newcastle"] = [random.random(), random.random()]
-	ability_dict["QPR"] = [random.random(), random.random()]
-	ability_dict["Southampton"] = [random.random(), random.random()]
-	ability_dict["Stoke"] = [random.random(), random.random()]
-	ability_dict["Sunderland"] = [random.random(), random.random()]
-	ability_dict["Swansea"] = [random.random(), random.random()]
-	ability_dict["Tottenham"] = [random.random(), random.random()]
-	ability_dict["West Brom"] = [random.random(), random.random()]
-	ability_dict["West Ham"] = [random.random(), random.random()]
+	for team in teams :
+		ability_dict[team] = [random.random(), random.random()]
 	return ability_dict
 
+""" Calculates logarithm of likelihood function """
+def log_likelihood(results_list, ability_dict) :
+	total = 0.0
+	for match in results_list :
+		days = float(match[0])
+#		print match[0], match[1], match[2], match[3], match[4]
+		home_team = match[1]
+		away_team = match[2]
+		home_mean = home_adv * ability_dict[home_team][0] \
+		* ability_dict[away_team][1] 
+		away_mean = ability_dict[away_team][0] * ability_dict[home_team][1]
+		home_goals = match[3]
+		away_goals = match[4]
+		home_dist = poisson(home_mean, home_goals + 1)
+		away_dist = poisson(away_mean, away_goals + 1)
+		tau = tau_matrix(home_mean, away_mean, home_goals, away_goals)
+		total += (math.log(home_dist[home_goals]) \
+		+ math.log(away_dist[away_goals]) + math.log(tau))
+#		total += math.exp(- decay * days) * (math.log(home_dist[home_goals]) \
+#		+ math.log(away_dist[away_goals]) + math.log(tau))
+	return total
+	
 """ Distribution of results doesn't fit Poisson perfectly, altered slighly
-	by parameter rho
-	"""
+	by parameter rho"""
 def tau_matrix(home_mean, away_mean, home_goals, away_goals) : 
 	if home_goals == 0 and away_goals == 0 :
 		return 1.0 - home_mean * away_mean * rho
@@ -100,30 +97,20 @@ def tau_matrix(home_mean, away_mean, home_goals, away_goals) :
 	else :
 		return 1.0
 
-""" Calculates logarithm of likelihood function 
-	"""
-def log_likelihood(match_list, ability_dict) :
-	total = 0.0
-	for match in match_list :
-		days = float(match[0])
-		home_team = match[1]
-		away_team = match[2]
-		home_mean = home_adv * ability_dict[home_team][0] \
-		* ability_dict[away_team][1] 
-		away_mean = ability_dict[away_team][0] * ability_dict[home_team][1]
-		home_goals = match[3]
-		away_goals = match[4]
-		home_dist = poisson(home_mean, home_goals + 1)
-		away_dist = poisson(away_mean, away_goals + 1)
-		tau = tau_matrix(home_mean, away_mean, home_goals, away_goals)
-		total += math.exp(- decay * days) * (math.log(home_dist[home_goals]) \
-		+ math.log(away_dist[away_goals]) + math.log(tau))
-	return total
+"""Poisson distribution for mean m, calculated up to n-1"""	
+def poisson(m, n):
+    p=math.exp(-m)
+    r=[p]
+    for i in range(1, n):
+        p*=m/float(i)
+        r.append(p)
+    return r
+# f(k) = exp(-m) * m**k / k!
 
 """ MC routine to maximise likelihood function, convergence determined by
-	'rdiff' 
-	"""
-def monte_carlo_opt(like, ability_dict, match_list) :
+	'rdiff'. Returns optimised ability_dict, log likelihood convergence and 
+	number of cycles."""
+def monte_carlo_opt(log_like, ability_dict, results_list) :
 	delta = 0.1
 	conv = []
 	k = 0
@@ -135,51 +122,40 @@ def monte_carlo_opt(like, ability_dict, match_list) :
 			disp = delta * (random.random() - 0.5)
 			ability_dict[key][j] += disp
 			if ability_dict[key][j] > 0 : 
-				trial = log_likelihood(match_list, ability_dict)	
-				if trial < like :
+				trial = log_likelihood(results_list, ability_dict)	
+				if trial < log_like :
 					ability_dict[key][j] -= disp
 				else :
-					rdiff = abs((trial - like)/like)
-					like = trial
+					rdiff = abs((trial - log_like)/log_like)
+					log_like = trial
 			else :
 				ability_dict[key][j] -= disp					
-		conv.append(like)
+		conv.append(log_like)
 		k += 1
 	return (ability_dict, conv, k)
 	
-def poisson(m, n):
-    p=math.exp(-m)
-    r=[p]
-    for i in range(1, n):
-        p*=m/float(i)
-        r.append(p)
-    return r
-# f(k) = exp(-m) * m**k / k!
-
-""" Sum of all outcomes where home goals > away goals
-	"""
+""" Sum of all outcomes where home goals > away goals"""
 def home_win(matrix) :
 	return sum([matrix[i][j]                    
     	for i in range(matrix.shape[0])
         for j in range(matrix.shape[1])
         if i > j])
-""" Sum of all outcomes where home goals = away goals
-	"""
+        
+""" Sum of all outcomes where home goals = away goals"""
 def draw(matrix) :
 	return sum([matrix[i][j]                    
     	for i in range(matrix.shape[0])
         for j in range(matrix.shape[1])
         if i == j])
-""" Sum of all outcomes where home goals < away goals
-	"""   
+        
+""" Sum of all outcomes where home goals < away goals"""   
 def away_win(matrix) :
 	return sum([matrix[i][j]                    
     	for i in range(matrix.shape[0])
         for j in range(matrix.shape[1])
         if i < j])
 
-""" Print results to command line
-	"""
+""" Print results to command line"""
 def print_probs(matrix) :
 	print " "
 	print "Probabilities calculated as..."
